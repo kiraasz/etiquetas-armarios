@@ -10,8 +10,7 @@ from reportlab.lib.colors import lightgrey
 BASE_DIR = Path(__file__).resolve().parent
 ARQUIVO_EXCEL = BASE_DIR / "dados" / "base.xlsx"
 ASSETS_DIR = BASE_DIR / "assets"
-OUT_DIR = BASE_DIR / "output"
-
+OUT_DIR = Path("output")
 OUT_DIR.mkdir(exist_ok=True)
 
 # ================== CONFIG ETIQUETA ==================
