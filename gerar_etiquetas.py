@@ -8,7 +8,7 @@ from reportlab.lib.colors import black, lightgrey
 # ======================
 # CONFIGURAÇÕES
 # ======================
-ARQUIVO_EXCEL = "dados/Relação Armários novos.xlsx"  # ajuste se o nome for diferente
+ARQUIVO_EXCEL = "dados/base.xlsx"  # ajuste se o nome for diferente
 OUT_DIR = "output"
 
 LARGURA_RG = 85.6 * mm
