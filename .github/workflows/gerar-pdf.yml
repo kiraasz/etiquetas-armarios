@@ -22,10 +22,16 @@ jobs:
           pip install pandas openpyxl reportlab
 
       - name: Gerar PDFs
-        run: python gerar_etiquetas.py
+        run: python gerar_etiquetas.py     
+        
+      - name: Listar arquivos gerados
+        run: |
+          echo "Conteúdo da pasta:"
+          ls -R .
 
       - name: Upload PDFs
         uses: actions/upload-artifact@v4
         with:
           name: etiquetas-armarios
-          path: output/*.pdf
+          path: |
+            **/output/*.pdf
