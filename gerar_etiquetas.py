@@ -6,128 +6,158 @@ from reportlab.platypus import Paragraph
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.colors import lightgrey
 
-# ================== CAMINHOS ==================
+# ==================================================
+# CAMINHOS
+# ==================================================
 BASE_DIR = Path(__file__).resolve().parent
 ARQUIVO_EXCEL = BASE_DIR / "dados" / "base.xlsx"
 ASSETS_DIR = BASE_DIR / "assets"
-OUT_DIR = BASE_DIR / "output"   # 🔴 CORREÇÃO AQUI
+OUT_DIR = BASE_DIR / "output"
 OUT_DIR.mkdir(exist_ok=True)
 
-# ================== CONFIG ETIQUETA ==================
+# ==================================================
+# CONFIGURAÇÃO – TAMANHO EXATO DO NOVO RG (ID-1)
+# ==================================================
 ETIQUETA_LARGURA = 85.6 * mm
-ETIQUETA_ALTURA = 54 * mm
+ETIQUETA_ALTURA = 53.98 * mm
 
-MARGEM_X = 6 * mm
-MARGEM_Y = 6 * mm
+# Margens mínimas (capinha justa)
+MARGEM_X = 3 * mm
+MARGEM_Y = 3 * mm
 
-# ================== ESTILOS ==================
+# ==================================================
+# ESTILOS (OTIMIZADOS PARA LEITURA E ESPAÇO)
+# ==================================================
+style_armario = ParagraphStyle(
+    "Armario",
+    fontSize=19,
+    leading=21,
+    alignment=1
+)
+
 style_nome = ParagraphStyle(
     "Nome",
-    fontSize=11,
-    leading=13,
-    alignment=1,
-    spaceAfter=4
+    fontSize=12,
+    leading=14,
+    alignment=1
 )
 
 style_setor = ParagraphStyle(
     "Setor",
-    fontSize=8,
-    leading=10,
+    fontSize=9,
+    leading=11,
     alignment=1,
-    backColor=lightgrey,
-    spaceAfter=4
+    backColor=lightgrey
 )
 
 style_gestor = ParagraphStyle(
     "Gestor",
-    fontSize=7,
-    leading=9,
+    fontSize=8,
+    leading=10,
     alignment=1,
     italic=True
 )
 
-style_armario = ParagraphStyle(
-    "Armario",
-    fontSize=16,
-    leading=18,
-    alignment=1,
-    spaceAfter=6
-)
-
-# ================== FUNÇÃO PDF ==================
-def gerar_pdf(df, caminho_pdf, titulo):
-    c = canvas.Canvas(str(caminho_pdf), pagesize=(ETIQUETA_LARGURA, ETIQUETA_ALTURA))
+# ==================================================
+# FUNÇÃO PARA GERAR PDF
+# ==================================================
+def gerar_pdf(df, caminho_pdf):
+    c = canvas.Canvas(
+        str(caminho_pdf),
+        pagesize=(ETIQUETA_LARGURA, ETIQUETA_ALTURA)
+    )
 
     logo_path = ASSETS_DIR / "logo.png"
+    largura_util = ETIQUETA_LARGURA - 2 * MARGEM_X
 
     for _, row in df.iterrows():
+        y_topo = ETIQUETA_ALTURA - MARGEM_Y
         x = MARGEM_X
-        largura = ETIQUETA_LARGURA - 2 * MARGEM_X
-        altura = ETIQUETA_ALTURA - 2 * MARGEM_Y
-        y_atual = ETIQUETA_ALTURA - MARGEM_Y
 
+        # LOGO
         if logo_path.exists():
             c.drawImage(
                 str(logo_path),
                 x,
-                y_atual - 14 * mm,
-                width=14 * mm,
-                height=14 * mm,
+                y_topo - 11 * mm,
+                width=11 * mm,
+                height=11 * mm,
                 preserveAspectRatio=True
             )
 
+        # NÚMERO DO ARMÁRIO
         p_arm = Paragraph(f"<b>{row['armario']}</b>", style_armario)
-        p_arm.wrap(largura, altura)
-        p_arm.drawOn(c, x, y_atual - 22 * mm)
+        p_arm.wrap(largura_util, ETIQUETA_ALTURA)
+        p_arm.drawOn(c, x, y_topo - 19 * mm)
 
+        # NOME
         p_nome = Paragraph(row["nome"], style_nome)
-        p_nome.wrap(largura, altura)
-        p_nome.drawOn(c, x, y_atual - 34 * mm)
+        p_nome.wrap(largura_util, ETIQUETA_ALTURA)
+        p_nome.drawOn(c, x, y_topo - 31 * mm)
 
+        # SETOR
         p_setor = Paragraph(row["setor"], style_setor)
-        p_setor.wrap(largura, altura)
-        p_setor.drawOn(c, x, y_atual - 42 * mm)
+        p_setor.wrap(largura_util, ETIQUETA_ALTURA)
+        p_setor.drawOn(c, x, y_topo - 40 * mm)
 
-        if pd.notna(row["gestor"]):
+        # GESTOR
+        if pd.notna(row["gestor"]) and str(row["gestor"]).strip():
             p_gestor = Paragraph(f"Gestor: {row['gestor']}", style_gestor)
-            p_gestor.wrap(largura, altura)
-            p_gestor.drawOn(c, x, y_atual - 50 * mm)
+            p_gestor.wrap(largura_util, ETIQUETA_ALTURA)
+            p_gestor.drawOn(c, x, y_topo - 49 * mm)
 
         c.showPage()
 
     c.save()
 
-# ================== LEITURA EXCEL ==================
-if not ARQUIVO_EXCEL.exists():
-    raise FileNotFoundError(f"Arquivo não encontrado: {ARQUIVO_EXCEL}")
-
+# ==================================================
+# LEITURA DO EXCEL
+# ==================================================
 df = pd.read_excel(ARQUIVO_EXCEL)
 df.columns = [c.strip().lower() for c in df.columns]
 
-colunas_obrigatorias = {"nome", "setor", "gestor", "sexo"}
-if not colunas_obrigatorias.issubset(df.columns):
-    raise ValueError(f"O Excel deve conter as colunas: {colunas_obrigatorias}")
+# Normalização do campo sexo (robusto)
+df["sexo"] = (
+    df["sexo"]
+    .astype(str)
+    .str.strip()
+    .str.lower()
+    .replace({
+        "m": "masculino",
+        "masc": "masculino",
+        "f": "feminino",
+        "fem": "feminino"
+    })
+)
 
-# ================== ORDENAÇÃO ==================
+# ==================================================
+# ORDENAÇÃO
+# ==================================================
 df = df.sort_values(by=["setor", "nome"])
 
-# ================== DIVISÃO POR SEXO ==================
-df_m = df[df["sexo"].str.lower() == "m"].reset_index(drop=True)
-df_f = df[df["sexo"].str.lower() == "f"].reset_index(drop=True)
+# ==================================================
+# DIVISÃO POR SEXO
+# ==================================================
+df_m = df[df["sexo"] == "masculino"].reset_index(drop=True)
+df_f = df[df["sexo"] == "feminino"].reset_index(drop=True)
 
 df_m["armario"] = range(1, len(df_m) + 1)
 df_f["armario"] = range(1, len(df_f) + 1)
-print("Linhas totais no Excel:", len(df))
-print("M:", len(df_m))
-print("F:", len(df_f))
-# ================== GERAR PDFS ==================
-if len(df_m) > 0:
-    gerar_pdf(df_m, OUT_DIR / "etiquetas_masculino.pdf", "Masculino")
 
-if len(df_f) > 0:
-    gerar_pdf(df_f, OUT_DIR / "etiquetas_feminino.pdf", "Feminino")
-print("Arquivos na pasta output:")
-for f in OUT_DIR.glob("*"):
+print("Total registros:", len(df))
+print("Masculino:", len(df_m))
+print("Feminino:", len(df_f))
+
+# ==================================================
+# GERAÇÃO DOS PDFs
+# ==================================================
+if not df_m.empty:
+    gerar_pdf(df_m, OUT_DIR / "etiquetas_masculino.pdf")
+
+if not df_f.empty:
+    gerar_pdf(df_f, OUT_DIR / "etiquetas_feminino.pdf")
+
+print("PDFs gerados:")
+for f in OUT_DIR.glob("*.pdf"):
     print(f)
-print("PDFs gerados com sucesso!")
 
