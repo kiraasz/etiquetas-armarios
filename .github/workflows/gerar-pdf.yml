@@ -21,8 +21,9 @@ jobs:
       - name: Gerar PDFs
         run: python gerar_etiquetas.py
 
-      - name: Upload PDFs
-        uses: actions/upload-artifact@v4
-        with:
-          name: etiquetas-armarios
-          path: output/*.pdf
+- name: Upload PDFs
+  uses: actions/upload-artifact@v4
+  with:
+    name: etiquetas-armarios
+    path: |
+      output/*.pdf
