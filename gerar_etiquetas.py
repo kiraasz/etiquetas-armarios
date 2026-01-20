@@ -112,14 +112,14 @@ if not colunas_obrigatorias.issubset(df.columns):
 df = df.sort_values(by=["setor", "nome"])
 
 # ================== DIVISÃO POR SEXO ==================
-df_m = df[df["sexo"].str.lower() == "masculino"].reset_index(drop=True)
-df_f = df[df["sexo"].str.lower() == "feminino"].reset_index(drop=True)
+df_m = df[df["sexo"].str.lower() == "m"].reset_index(drop=True)
+df_f = df[df["sexo"].str.lower() == "f"].reset_index(drop=True)
 
 df_m["armario"] = range(1, len(df_m) + 1)
 df_f["armario"] = range(1, len(df_f) + 1)
 print("Linhas totais no Excel:", len(df))
-print("Masculino:", len(df_m))
-print("Feminino:", len(df_f))
+print("M:", len(df_m))
+print("F:", len(df_f))
 # ================== GERAR PDFS ==================
 if len(df_m) > 0:
     gerar_pdf(df_m, OUT_DIR / "etiquetas_masculino.pdf", "Masculino")
