@@ -107,9 +107,7 @@ df.columns = [c.strip().lower() for c in df.columns]
 colunas_obrigatorias = {"nome", "setor", "gestor", "sexo"}
 if not colunas_obrigatorias.issubset(df.columns):
     raise ValueError(f"O Excel deve conter as colunas: {colunas_obrigatorias}")
-print("Linhas totais no Excel:", len(df))
-print("Masculino:", len(df_m))
-print("Feminino:", len(df_f))
+
 # ================== ORDENAÇÃO ==================
 df = df.sort_values(by=["setor", "nome"])
 
@@ -119,7 +117,9 @@ df_f = df[df["sexo"].str.lower() == "feminino"].reset_index(drop=True)
 
 df_m["armario"] = range(1, len(df_m) + 1)
 df_f["armario"] = range(1, len(df_f) + 1)
-
+print("Linhas totais no Excel:", len(df))
+print("Masculino:", len(df_m))
+print("Feminino:", len(df_f))
 # ================== GERAR PDFS ==================
 if len(df_m) > 0:
     gerar_pdf(df_m, OUT_DIR / "etiquetas_masculino.pdf", "Masculino")
