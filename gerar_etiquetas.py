@@ -136,4 +136,10 @@ if len(df_m) > 0:
 if len(df_f) > 0:
     gerar_pdf(df_f, OUT_DIR / "etiquetas_feminino.pdf", "Feminino")
 
+- name: Upload PDFs
+  uses: actions/upload-artifact@v4
+  with:
+    name: etiquetas-armarios
+    path: |
+      output/*.pdf
 print("PDFs gerados com sucesso!")
