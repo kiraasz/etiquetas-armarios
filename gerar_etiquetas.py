@@ -137,7 +137,3 @@ if len(df_f) > 0:
     gerar_pdf(df_f, OUT_DIR / "etiquetas_feminino.pdf", "Feminino")
 
 print("PDFs gerados com sucesso!")
-
-
-
-
