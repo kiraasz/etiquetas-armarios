@@ -10,7 +10,7 @@ from reportlab.lib.colors import lightgrey
 BASE_DIR = Path(__file__).resolve().parent
 ARQUIVO_EXCEL = BASE_DIR / "dados" / "base.xlsx"
 ASSETS_DIR = BASE_DIR / "assets"
-OUT_DIR = Path("output")
+OUT_DIR = BASE_DIR / "output"   # 🔴 CORREÇÃO AQUI
 OUT_DIR.mkdir(exist_ok=True)
 
 # ================== CONFIG ETIQUETA ==================
@@ -25,7 +25,7 @@ style_nome = ParagraphStyle(
     "Nome",
     fontSize=11,
     leading=13,
-    alignment=1,  # centralizado
+    alignment=1,
     spaceAfter=4
 )
 
@@ -62,13 +62,10 @@ def gerar_pdf(df, caminho_pdf, titulo):
 
     for _, row in df.iterrows():
         x = MARGEM_X
-        y = MARGEM_Y
         largura = ETIQUETA_LARGURA - 2 * MARGEM_X
         altura = ETIQUETA_ALTURA - 2 * MARGEM_Y
-
         y_atual = ETIQUETA_ALTURA - MARGEM_Y
 
-        # LOGO (se existir)
         if logo_path.exists():
             c.drawImage(
                 str(logo_path),
@@ -79,25 +76,21 @@ def gerar_pdf(df, caminho_pdf, titulo):
                 preserveAspectRatio=True
             )
 
-        # NÚMERO DO ARMÁRIO
         p_arm = Paragraph(f"<b>{row['armario']}</b>", style_armario)
-        w, h = p_arm.wrap(largura, altura)
+        p_arm.wrap(largura, altura)
         p_arm.drawOn(c, x, y_atual - 22 * mm)
 
-        # NOME
         p_nome = Paragraph(row["nome"], style_nome)
-        w, h = p_nome.wrap(largura, altura)
+        p_nome.wrap(largura, altura)
         p_nome.drawOn(c, x, y_atual - 34 * mm)
 
-        # SETOR
         p_setor = Paragraph(row["setor"], style_setor)
-        w, h = p_setor.wrap(largura, altura)
+        p_setor.wrap(largura, altura)
         p_setor.drawOn(c, x, y_atual - 42 * mm)
 
-        # GESTOR
         if pd.notna(row["gestor"]):
             p_gestor = Paragraph(f"Gestor: {row['gestor']}", style_gestor)
-            w, h = p_gestor.wrap(largura, altura)
+            p_gestor.wrap(largura, altura)
             p_gestor.drawOn(c, x, y_atual - 50 * mm)
 
         c.showPage()
@@ -109,11 +102,8 @@ if not ARQUIVO_EXCEL.exists():
     raise FileNotFoundError(f"Arquivo não encontrado: {ARQUIVO_EXCEL}")
 
 df = pd.read_excel(ARQUIVO_EXCEL)
-
-# normaliza nomes de colunas
 df.columns = [c.strip().lower() for c in df.columns]
 
-# valida colunas
 colunas_obrigatorias = {"nome", "setor", "gestor", "sexo"}
 if not colunas_obrigatorias.issubset(df.columns):
     raise ValueError(f"O Excel deve conter as colunas: {colunas_obrigatorias}")
@@ -136,3 +126,4 @@ if len(df_f) > 0:
     gerar_pdf(df_f, OUT_DIR / "etiquetas_feminino.pdf", "Feminino")
 
 print("PDFs gerados com sucesso!")
+
